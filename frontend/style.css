@@ -64,8 +64,17 @@ h2 { margin: 0 0 1rem; font-size: 1.05rem; }
 
 #upload-status { margin: .7rem 0 0; font-size: .85rem; color: var(--text-muted); }
 
-.results-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.results-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .3rem; }
 .results-head h2 { margin: 0; }
+
+.stats-line { margin: 0 0 1rem; font-size: .8rem; color: var(--text-muted); }
+.stats-line .source {
+  font-weight: 600;
+  padding: .05rem .4rem;
+  border-radius: 4px;
+}
+.stats-line .source.cache { background: var(--accent-2); color: #fff; }
+.stats-line .source.db { background: var(--accent); color: #fff; }
 
 .image-list { display: flex; flex-direction: column; gap: .6rem; }
 .empty { color: var(--text-muted); font-size: .88rem; }

@@ -6,7 +6,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from . import db
+from . import cache, db
 
 UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "/data/uploads")
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -57,11 +57,31 @@ async def upload_image(file: UploadFile = File(...)):
     finally:
         conn.close()
 
+    cache.increment_upload_count()
+
     return {
         "id": image_id,
         "filename": file.filename,
         "status": "pending",
     }
+
+
+@app.get("/api/stats")
+def get_stats():
+    cached_count, hit = cache.get_cached_total_uploads()
+    if hit:
+        return {"total_uploads": cached_count, "source": "cache"}
+
+    conn = db.get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) AS total FROM images")
+            total = cur.fetchone()["total"]
+    finally:
+        conn.close()
+
+    cache.set_cached_total_uploads(total)
+    return {"total_uploads": total, "source": "db"}
 
 
 @app.get("/api/images")

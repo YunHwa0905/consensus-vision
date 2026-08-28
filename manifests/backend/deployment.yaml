@@ -34,6 +34,10 @@ spec:
                 secretKeyRef: { name: mysql-secret, key: password }
             - name: UPLOAD_DIR
               value: /data/uploads
+            - name: REDIS_HOST
+              value: redis-service
+            - name: REDIS_PORT
+              value: "6379"
           volumeMounts:
             - name: uploads-storage
               mountPath: /data/uploads

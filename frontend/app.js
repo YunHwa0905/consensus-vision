@@ -3,6 +3,18 @@ const fileInput = document.getElementById("file-input");
 const uploadStatus = document.getElementById("upload-status");
 const imageList = document.getElementById("image-list");
 const refreshBtn = document.getElementById("refresh-btn");
+const statsLine = document.getElementById("stats-line");
+
+async function loadStats() {
+  try {
+    const res = await fetch("/api/stats");
+    if (!res.ok) return;
+    const { total_uploads, source } = await res.json();
+    statsLine.innerHTML = `총 업로드 <strong>${total_uploads}</strong>건 · <span class="source ${source}">${source === "cache" ? "Redis 캐시" : "DB 조회"}</span>`;
+  } catch {
+    // stats는 부가 정보라 실패해도 조용히 무시
+  }
+}
 
 const BADGE_LABEL = {
   pending: "예측 대기",
@@ -62,11 +74,16 @@ uploadForm.addEventListener("submit", async (e) => {
     uploadStatus.textContent = "업로드 완료!";
     fileInput.value = "";
     loadImages();
+    loadStats();
   } catch (err) {
     uploadStatus.textContent = err.message;
   }
 });
 
-refreshBtn.addEventListener("click", loadImages);
+refreshBtn.addEventListener("click", () => {
+  loadImages();
+  loadStats();
+});
 
 loadImages();
+loadStats();
