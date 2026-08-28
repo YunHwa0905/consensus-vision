@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>합의 라벨링</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>AI 라벨링 합의 플랫폼</h1>
+    <p class="subtitle">이미지를 업로드하면 분류 결과를 사람이 투표로 검증합니다</p>
+  </header>
+
+  <main>
+    <section class="upload-card">
+      <h2>이미지 업로드</h2>
+      <form id="upload-form">
+        <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.webp" required>
+        <button type="submit">업로드</button>
+      </form>
+      <p id="upload-status"></p>
+    </section>
+
+    <section class="results-card">
+      <div class="results-head">
+        <h2>업로드 결과</h2>
+        <button id="refresh-btn" type="button">새로고침</button>
+      </div>
+      <div id="image-list" class="image-list">
+        <p class="empty">아직 업로드된 이미지가 없습니다.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --border: #dfe5e8;
+  --text: #1c2529;
+  --text-muted: #62717a;
+  --accent: #c97a2b;
+  --accent-2: #2b6e7a;
+  --pending: #9aa5ab;
+  --predicted: #2b6e7a;
+  --confirmed: #3f8f5f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  padding: 2rem 1.5rem 1.5rem;
+  text-align: center;
+}
+header h1 { margin: 0 0 .4rem; font-size: 1.5rem; }
+.subtitle { margin: 0; color: var(--text-muted); font-size: .9rem; }
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.upload-card, .results-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+
+h2 { margin: 0 0 1rem; font-size: 1.05rem; }
+
+#upload-form {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+#upload-form input[type="file"] { flex: 1; min-width: 200px; }
+#upload-form button, #refresh-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: .55rem 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+#refresh-btn { background: var(--accent-2); padding: .4rem .8rem; font-size: .82rem; }
+
+#upload-status { margin: .7rem 0 0; font-size: .85rem; color: var(--text-muted); }
+
+.results-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.results-head h2 { margin: 0; }
+
+.image-list { display: flex; flex-direction: column; gap: .6rem; }
+.empty { color: var(--text-muted); font-size: .88rem; }
+
+.image-row {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  padding: .6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.image-row img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--bg);
+}
+.image-row .meta { flex: 1; min-width: 0; }
+.image-row .filename { font-size: .88rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.image-row .time { font-size: .76rem; color: var(--text-muted); }
+
+.badge {
+  font-size: .74rem;
+  font-weight: 600;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  color: #fff;
+  white-space: nowrap;
+}
+.badge.pending { background: var(--pending); }
+.badge.predicted { background: var(--predicted); }
+.badge.confirmed { background: var(--confirmed); }
