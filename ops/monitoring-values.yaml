@@ -29,11 +29,27 @@ grafana:
   # adminPassword를 여기 안 박아두고, 설치 시 --set으로 넘기거나 자동 생성된 값을
   # kubectl로 조회해서 씀 (mysql-secret과 같은 이유 - 비번을 git에 안 남기려고)
   resources:
-    requests: { cpu: 100m, memory: 128Mi }
-    limits: { cpu: 300m, memory: 256Mi }
+    requests: { cpu: 150m, memory: 192Mi }
+    limits: { cpu: 500m, memory: 384Mi }
   service:
     type: NodePort
     nodePort: 30300
+  # Grafana 최신 버전(apiserver/앱 플랫폼 초기화 포함)이 뜨는 데 생각보다 오래 걸려서
+  # 기본 probe 타이밍으로는 다 뜨기 전에 liveness가 죽여버리는 재시작 루프가 생김 -> 완화
+  livenessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 90
+    timeoutSeconds: 10
+    failureThreshold: 10
+  readinessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 10
 
 nodeExporter:
   enabled: true
