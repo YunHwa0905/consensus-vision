@@ -26,6 +26,10 @@ def _get_producer():
             max_block_ms=15000,
             reconnect_backoff_ms=500,
             reconnect_backoff_max_ms=5000,
+            # 버전 자동 감지(check_version)가 네트워크 왕복 핸드셰이크를 필요로 하는데,
+            # 이 클러스터는 가끔 그 왕복이 지연/실패해서 NoBrokersAvailable로 이어짐.
+            # 버전을 고정해서 그 핸드셰이크 자체를 생략함 (Kafka는 하위 호환되므로 안전).
+            api_version=(2, 8, 1),
         )
     return _producer
 
