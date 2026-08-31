@@ -33,6 +33,20 @@ spec:
       transaction.state.log.min.isr: 1
       default.replication.factor: 1
       min.insync.replicas: 1
+    # Strimzi가 자동 관리하는 내부 컨트롤러(9090) 리스너는 useServiceDnsDomain이 안 먹혀서
+    # 짧은 이름(...kafka.svc)을 못 찾는 문제가 있었음. Pod의 DNS search를 cluster.local
+    # 하나로 고정해서, JVM 리졸버가 틀린 중간 조합에서 포기하지 않고 바로 정답을 찾게 함.
+    template:
+      pod:
+        dnsPolicy: None
+        dnsConfig:
+          nameservers:
+            - 10.96.0.10
+          searches:
+            - cluster.local
+          options:
+            - name: ndots
+              value: "5"
   entityOperator:
     topicOperator: {}
     userOperator: {}
