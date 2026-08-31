@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: consensus-vision-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"   # Grafana sidecar가 이 라벨 붙은 ConfigMap을 자동으로 찾아서 로드함
+data:
+  consensus-vision.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Kafka Consumer Lag (image-jobs)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            { "expr": "kafka_consumergroup_lag{topic=\"image-jobs\"}", "legendFormat": "partition {{partition}}", "refId": "A" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "type": "timeseries",
+          "title": "Classifier Worker Pod 수 (KEDA 스케일링)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            { "expr": "kube_deployment_status_replicas{namespace=\"webapp\", deployment=\"classifier-worker\"}", "legendFormat": "replicas", "refId": "A" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "type": "timeseries",
+          "title": "CPU 사용량 (webapp 네임스페이스)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            { "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"webapp\"}[5m])) by (pod)", "legendFormat": "{{pod}}", "refId": "A" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] }
+        },
+        {
+          "type": "timeseries",
+          "title": "메모리 사용량 (webapp 네임스페이스)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "targets": [
+            { "expr": "sum(container_memory_working_set_bytes{namespace=\"webapp\"}) by (pod)", "legendFormat": "{{pod}}", "refId": "A" }
+          ],
+          "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 39,
+      "tags": ["consensus-vision"],
+      "templating": {
+        "list": [
+          { "name": "datasource", "type": "datasource", "query": "prometheus", "current": {}, "hide": 0 }
+        ]
+      },
+      "time": { "from": "now-30m", "to": "now" },
+      "timepicker": {},
+      "timezone": "",
+      "title": "합의 라벨링 - 커스텀 관측 대시보드",
+      "uid": "consensus-vision-custom",
+      "version": 1,
+      "weekStart": ""
+    }
