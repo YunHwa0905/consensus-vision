@@ -1,0 +1,42 @@
+# kube-prometheus-stack helm values
+# 워커 노드 1대(4vCPU/8GB)를 Kafka/MySQL/Redis/backend/worker/ArgoCD와 나눠 써야 해서
+# 이 프로젝트 스코프에 안 쓰는 컴포넌트는 끄고, 리소스도 낮게 잡음.
+
+alertmanager:
+  enabled: false   # 이 프로젝트에서는 알림 발송까지는 다루지 않음
+
+prometheus:
+  prometheusSpec:
+    resources:
+      requests: { cpu: 200m, memory: 512Mi }
+      limits: { cpu: 500m, memory: 1Gi }
+    retention: 1d
+    # kubeadm 기본 설정에서는 이 컴포넌트들 metrics 포트가 로컬호스트에만 열려있어
+    # 스크레이핑이 계속 실패로 뜨는 노이즈만 생김 -> 꺼서 대시보드 깔끔하게 유지
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+grafana:
+  # adminPassword를 여기 안 박아두고, 설치 시 --set으로 넘기거나 자동 생성된 값을
+  # kubectl로 조회해서 씀 (mysql-secret과 같은 이유 - 비번을 git에 안 남기려고)
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { cpu: 300m, memory: 256Mi }
+  service:
+    type: NodePort
+    nodePort: 30300
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
