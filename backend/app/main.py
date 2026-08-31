@@ -6,7 +6,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from . import cache, db
+from . import cache, db, kafka_producer
 
 UPLOAD_DIR = os.environ.get("UPLOAD_DIR", "/data/uploads")
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -46,18 +46,22 @@ async def upload_image(file: UploadFile = File(...)):
     with open(stored_path, "wb") as f:
         f.write(contents)
 
+    uploaded_at = datetime.utcnow()
     conn = db.get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute(
                 "INSERT INTO images (filename, stored_path, status, uploaded_at) VALUES (%s, %s, %s, %s)",
-                (file.filename, stored_path, "pending", datetime.utcnow()),
+                (file.filename, stored_path, "pending", uploaded_at),
             )
             image_id = cur.lastrowid
     finally:
         conn.close()
 
     cache.increment_upload_count()
+
+    image_url = f"http://backend-service.webapp.svc.cluster.local:8080/api/images/{image_id}/file"
+    kafka_producer.publish_image_job(image_id, image_url, uploaded_at.isoformat())
 
     return {
         "id": image_id,

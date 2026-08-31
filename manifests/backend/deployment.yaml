@@ -38,6 +38,8 @@ spec:
               value: redis-service
             - name: REDIS_PORT
               value: "6379"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: consensus-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092
           volumeMounts:
             - name: uploads-storage
               mountPath: /data/uploads

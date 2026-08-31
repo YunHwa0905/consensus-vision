@@ -4,3 +4,4 @@ pymysql==1.1.1
 cryptography==43.0.1
 python-multipart==0.0.9
 redis==5.0.8
+kafka-python-ng==2.2.3
