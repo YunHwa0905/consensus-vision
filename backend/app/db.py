@@ -66,5 +66,16 @@ def init_schema():
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                 """
             )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS votes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    image_id INT NOT NULL,
+                    vote_correct BOOLEAN NOT NULL,
+                    voted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_votes_image_id (image_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                """
+            )
     finally:
         conn.close()

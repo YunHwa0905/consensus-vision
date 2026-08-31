@@ -9,8 +9,8 @@ async function loadStats() {
   try {
     const res = await fetch("/api/stats");
     if (!res.ok) return;
-    const { total_uploads, source } = await res.json();
-    statsLine.innerHTML = `총 업로드 <strong>${total_uploads}</strong>건 · <span class="source ${source}">${source === "cache" ? "Redis 캐시" : "DB 조회"}</span>`;
+    const { total_uploads, total_votes, source } = await res.json();
+    statsLine.innerHTML = `총 업로드 <strong>${total_uploads}</strong>건 · 총 투표 <strong>${total_votes}</strong>표 · <span class="source ${source}">${source === "cache" ? "Redis 캐시" : "DB 조회"}</span>`;
   } catch {
     // stats는 부가 정보라 실패해도 조용히 무시
   }
@@ -18,8 +18,9 @@ async function loadStats() {
 
 const BADGE_LABEL = {
   pending: "예측 대기",
-  predicted: "AI 예측 완료",
+  predicted: "투표 대기",
   confirmed: "합의 완료",
+  disputed: "AI 예측 틀림(재검토)",
 };
 
 async function loadImages() {
@@ -42,19 +43,60 @@ function renderImages(images) {
     .map((img) => {
       const label = img.confirmed_label || img.predicted_label || "-";
       const uploadedAt = new Date(img.uploaded_at).toLocaleString("ko-KR");
+      const canVote = img.status === "predicted" || img.status === "disputed";
+      const voteTally = img.correct_votes + img.incorrect_votes > 0
+        ? `<div class="tally">정답 ${img.correct_votes} · 오답 ${img.incorrect_votes} (${img.correct_votes + img.incorrect_votes}/3표)</div>`
+        : "";
+      const voteButtons = canVote
+        ? `
+          <div class="vote-buttons">
+            <button class="vote-btn agree" data-image-id="${img.id}" data-correct="true">✅ 맞음</button>
+            <button class="vote-btn disagree" data-image-id="${img.id}" data-correct="false">❌ 틀림</button>
+          </div>
+        `
+        : "";
       return `
         <div class="image-row">
           <img src="/api/images/${img.id}/file" alt="${img.filename}" loading="lazy">
           <div class="meta">
             <div class="filename">${img.filename}</div>
-            <div class="time">${uploadedAt} · ${label}</div>
+            <div class="time">${uploadedAt} · AI 예측: ${label}</div>
+            ${voteTally}
           </div>
-          <span class="badge ${img.status}">${BADGE_LABEL[img.status] || img.status}</span>
+          <div class="meta-right">
+            <span class="badge ${img.status}">${BADGE_LABEL[img.status] || img.status}</span>
+            ${voteButtons}
+          </div>
         </div>
       `;
     })
     .join("");
 }
+
+async function castVote(imageId, correct) {
+  try {
+    const res = await fetch(`/api/images/${imageId}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ correct }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "투표 실패");
+    }
+    loadImages();
+    loadStats();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// 목록이 새로고침마다 다시 그려지므로, 목록 컨테이너에 이벤트를 위임해서 등록
+imageList.addEventListener("click", (e) => {
+  const btn = e.target.closest(".vote-btn");
+  if (!btn) return;
+  castVote(btn.dataset.imageId, btn.dataset.correct === "true");
+});
 
 uploadForm.addEventListener("submit", async (e) => {
   e.preventDefault();

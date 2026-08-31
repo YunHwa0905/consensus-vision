@@ -9,6 +9,7 @@
   --pending: #9aa5ab;
   --predicted: #2b6e7a;
   --confirmed: #3f8f5f;
+  --disputed: #c0392b;
 }
 
 * { box-sizing: border-box; }
@@ -81,7 +82,7 @@ h2 { margin: 0 0 1rem; font-size: 1.05rem; }
 
 .image-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: .8rem;
   padding: .6rem;
   border: 1px solid var(--border);
@@ -93,10 +94,20 @@ h2 { margin: 0 0 1rem; font-size: 1.05rem; }
   object-fit: cover;
   border-radius: 6px;
   background: var(--bg);
+  flex: 0 0 auto;
 }
-.image-row .meta { flex: 1; min-width: 0; }
+.image-row .meta { flex: 1; min-width: 0; padding-top: .1rem; }
 .image-row .filename { font-size: .88rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .image-row .time { font-size: .76rem; color: var(--text-muted); }
+.image-row .tally { font-size: .74rem; color: var(--text-muted); margin-top: .25rem; }
+
+.meta-right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .4rem;
+}
 
 .badge {
   font-size: .74rem;
@@ -109,3 +120,18 @@ h2 { margin: 0 0 1rem; font-size: 1.05rem; }
 .badge.pending { background: var(--pending); }
 .badge.predicted { background: var(--predicted); }
 .badge.confirmed { background: var(--confirmed); }
+.badge.disputed { background: var(--disputed); }
+
+.vote-buttons { display: flex; gap: .35rem; }
+.vote-btn {
+  font-size: .72rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: .25rem .5rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.vote-btn.agree:hover { border-color: var(--confirmed); color: var(--confirmed); }
+.vote-btn.disagree:hover { border-color: var(--disputed); color: var(--disputed); }

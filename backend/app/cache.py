@@ -5,6 +5,7 @@ REDIS_HOST = os.environ.get("REDIS_HOST", "redis-service")
 REDIS_PORT = int(os.environ.get("REDIS_PORT", "6379"))
 
 STATS_TOTAL_UPLOADS_KEY = "stats:total_uploads"
+STATS_TOTAL_VOTES_KEY = "stats:total_votes"
 
 _client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True, socket_connect_timeout=2)
 
@@ -33,3 +34,18 @@ def set_cached_total_uploads(count: int):
         _client.set(STATS_TOTAL_UPLOADS_KEY, count)
     except redis.RedisError:
         pass
+
+
+def increment_vote_count():
+    try:
+        _client.incr(STATS_TOTAL_VOTES_KEY)
+    except redis.RedisError:
+        pass
+
+
+def get_total_votes() -> int:
+    try:
+        value = _client.get(STATS_TOTAL_VOTES_KEY)
+    except redis.RedisError:
+        return 0
+    return int(value) if value is not None else 0
