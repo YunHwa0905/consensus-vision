@@ -1,0 +1,23 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: classifier-worker-scaledobject
+  namespace: webapp
+spec:
+  scaleTargetRef:
+    name: classifier-worker
+  # 평소엔 0개까지 줄여서 자원을 아꼈다가, 업로드가 몰릴 때만 늘리는 이벤트 기반 스케일링 시연
+  minReplicaCount: 0
+  # 워커 노드 1대(4vCPU/8GB)를 Kafka/MySQL/Redis/backend와 나눠 쓰므로 max를 낮게 제한
+  maxReplicaCount: 3
+  pollingInterval: 15   # 15초마다 Kafka lag 확인
+  cooldownPeriod: 30    # lag이 임계치 밑으로 떨어진 뒤 30초간 유지되면 축소
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: consensus-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092
+        consumerGroup: classifier-worker
+        topic: image-jobs
+        lagThreshold: "5"        # 파티션당 평균 lag가 5를 넘으면 스케일 아웃
+        offsetResetPolicy: earliest
+        allowIdleConsumers: "false"
