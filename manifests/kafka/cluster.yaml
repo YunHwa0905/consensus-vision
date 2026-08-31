@@ -8,6 +8,18 @@ metadata:
     strimzi.io/kraft: enabled
 spec:
   kafka:
+    # hostPath 디스크(가상 디스크)가 느려서 기본 probe 타이밍(15s delay, 3회 실패=45초)으로는
+    # KRaft 메타데이터 초기화가 안 끝난 상태에서 죽었다 재시작하는 루프에 빠짐 -> 넉넉하게 늘림
+    livenessProbe:
+      initialDelaySeconds: 40
+      timeoutSeconds: 10
+      periodSeconds: 15
+      failureThreshold: 5
+    readinessProbe:
+      initialDelaySeconds: 40
+      timeoutSeconds: 10
+      periodSeconds: 15
+      failureThreshold: 5
     listeners:
       - name: plain
         port: 9092
