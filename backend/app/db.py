@@ -10,16 +10,29 @@ DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
 DB_NAME = os.environ.get("DB_NAME", "consensus")
 
 
-def get_connection():
-    return pymysql.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        cursorclass=DictCursor,
-        autocommit=True,
-    )
+def get_connection(max_retries: int = 3, retry_delay_seconds: float = 0.5):
+    """
+    클러스터 내부 DNS(CoreDNS)가 순간적으로 응답을 못 하는 경우가 있어
+    (iptables/conntrack 레벨의 잘 알려진 k8s 이슈), 짧게 재시도한다.
+    """
+    last_error = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            return pymysql.connect(
+                host=DB_HOST,
+                port=DB_PORT,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                database=DB_NAME,
+                cursorclass=DictCursor,
+                autocommit=True,
+                connect_timeout=5,
+            )
+        except pymysql.err.OperationalError as exc:
+            last_error = exc
+            if attempt < max_retries:
+                time.sleep(retry_delay_seconds)
+    raise last_error
 
 
 def wait_for_db(max_retries: int = 30, delay_seconds: float = 2.0):
