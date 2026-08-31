@@ -99,6 +99,15 @@ def process_message(payload: dict):
         logger.warning("Redis 라벨 카운트 갱신 실패 (무시하고 계속 진행)")
 
 
+def _safe_deserialize(raw: bytes):
+    """JSON 파싱 실패(예: 테스트용 문자열 메시지)로 Consumer 전체가 죽지 않도록 방어."""
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        logger.warning("JSON이 아닌 메시지라 건너뜀: %r", raw[:200])
+        return None
+
+
 def main():
     logger.info("Kafka Consumer 시작 (group_id=%s, topic=%s)", GROUP_ID, TOPIC)
     consumer = KafkaConsumer(
@@ -107,13 +116,15 @@ def main():
         group_id=GROUP_ID,
         auto_offset_reset="earliest",
         enable_auto_commit=True,
-        value_deserializer=lambda v: json.loads(v.decode("utf-8")),
+        value_deserializer=_safe_deserialize,
         api_version=(2, 8, 1),
         session_timeout_ms=30000,
         request_timeout_ms=40000,
     )
     logger.info("Consumer 준비 완료, 메시지 대기 중...")
     for message in consumer:
+        if message.value is None:
+            continue
         try:
             process_message(message.value)
         except Exception:
