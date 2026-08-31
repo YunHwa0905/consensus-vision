@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import encoding from 'k6/encoding';
-import { check, sleep } from 'k6';
+import { check } from 'k6';
 
 // 워커 노드 1대짜리 온프레미스 환경 - VU/기간을 너무 세게 잡지 않되,
 // Kafka lag가 쌓이고 KEDA가 실제로 스케일 아웃하는 걸 볼 수 있을 정도로는 부하를 줌
@@ -8,8 +8,8 @@ export const options = {
   scenarios: {
     upload_burst: {
       executor: 'constant-vus',
-      vus: 8,
-      duration: '3m',
+      vus: 25,
+      duration: '90s',
     },
   },
 };
@@ -28,5 +28,4 @@ export default function () {
   };
   const res = http.post(`${BASE_URL}/api/images`, payload);
   check(res, { 'upload 200': (r) => r.status === 200 });
-  sleep(1);
 }
