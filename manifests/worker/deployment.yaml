@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: classifier-worker
+  namespace: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: classifier-worker
+  template:
+    metadata:
+      labels:
+        app: classifier-worker
+    spec:
+      containers:
+        - name: classifier-worker
+          image: consensus-worker:latest
+          imagePullPolicy: Never
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: consensus-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092
+            - name: DB_HOST
+              value: mysql-service
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              value: consensus
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef: { name: mysql-secret, key: username }
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: mysql-secret, key: password }
+            - name: REDIS_HOST
+              value: redis-service
+            - name: REDIS_PORT
+              value: "6379"
+          # 워커 노드 1대뿐인 온프레미스 환경 - 다른 컴포넌트(Kafka/MySQL/Redis/backend)와
+          # 자원을 나눠 써야 하므로 requests/limits로 스케줄링 우선순위를 명시적으로 관리
+          resources:
+            requests: { cpu: "300m", memory: "512Mi" }
+            limits: { cpu: "1", memory: "768Mi" }
+      # (선택, 실제 온프레미스에 GPU 노드가 있었다면 이렇게 격리 배치했을 것)
+      # nodeSelector:
+      #   gpu: "true"
+      # tolerations:
+      #   - key: nvidia.com/gpu
+      #     operator: Exists
+      #     effect: NoSchedule
+      # containers:
+      #   - resources:
+      #       limits:
+      #         nvidia.com/gpu: 1
