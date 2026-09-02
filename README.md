@@ -34,6 +34,8 @@
 - **ArgoCD**가 GitHub 이 레포(`manifests/`)를 감시해서 `kubectl apply` 없이 자동 배포/자동 복구(self-heal)
 - **Prometheus + Grafana**가 Kafka lag / Pod 수 / CPU·메모리를 커스텀 대시보드로 실시간 관찰
 
+**인프라 스펙**: Ubuntu 24.04.4 LTS, kubeadm v1.36.4, Flannel(VXLAN) · master 2 vCPU/3GB RAM, worker 4 vCPU/8GB RAM(초기 3GB에서 증설) · master는 kubeadm 기본 control-plane taint로 워크로드가 자동으로 worker에만 스케줄링됨
+
 ## 기술 스택
 
 | 영역 | 선택 | 이유 |
@@ -93,9 +95,27 @@ submission/        제출용 보고서(Word)
 | 6 | ArgoCD GitOps | ✅ |
 | 7 | Prometheus + Grafana | ✅ |
 | 8 | 부하 테스트 + Self-Healing 검증 | ✅ |
-| 9 | 제출물 정리 (문서/캡처) | 진행 중 |
+| 9 | 제출물 정리 (보고서/발표자료/캡처) | ✅ |
 
 투표 기능(맞음/틀림 3표 다수결로 confirmed/disputed 확정)까지 반영 완료. **모델 재학습 파이프라인은 이번 범위 밖 — 향후 과제**로 남겨둠 (disputed로 확정된 데이터를 데이터셋으로 축적해 재학습하는 구조는 별도 MLOps 파이프라인이 필요).
+
+최종 발표자료·보고서는 `submission/` 폴더 참고.
+
+## 검증 결과 요약
+
+| 항목 | 결과 |
+|---|---|
+| Self-Healing (1차, Backend 강제 삭제) | 자동 재생성 확인 (Deployment→ReplicaSet reconciliation) |
+| Self-Healing (2차, 부하 중 Worker 삭제) | 재생성 + 컨슈머 그룹 재분배, 처리 끊김 없음 |
+| 부하 테스트 (k6, VU 25 · 90초) | 7,952건 요청 · 성공률 100% |
+| Kafka consumer lag 최대치 | 파티션별 약 5,500~6,000 |
+| KEDA 오토스케일링 | 0 → 3 → 0 스케일링 실측 확인 |
+| ArgoCD GitOps | git push → 자동 Sync, Healthy/Synced 상태 확인 |
+| 온프레미스 자원 한계 | 워커 1대 포화 시 kube-scheduler가 Insufficient cpu로 Pending 처리하는 것도 실측 |
+
+## 사용한 K8s 오브젝트
+
+Deployment×5, DaemonSet×1(kube-flannel), Job×1(k6), Service(ClusterIP×4 · NodePort×1), PVC/PV(hostPath), ConfigMap/Secret, ScaledObject(KEDA CRD)까지 사용. 특히 **CRD + Controller로 클러스터를 원하는 상태로 수렴시키는 Operator 패턴**을 Strimzi(Kafka) · KEDA · Prometheus Operator 세 곳에서 실제로 운용함.
 
 ## 트러블슈팅 하이라이트
 
